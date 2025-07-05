@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fireworks!</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    #launchBtn {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <button id="launchBtn">Launch Firework 🎆</button>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    resizeCanvas();
+
+    window.addEventListener('resize', resizeCanvas);
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    class Firework {
+      constructor(x, y, color) {
+        this.particles = [];
+        this.life = 0;
+        for (let i = 0; i < 30; i++) {
+          const angle = Math.random() * 2 * Math.PI;
+          const speed = Math.random() * 5 + 2;
+          const dx = Math.cos(angle) * speed;
+          const dy = Math.sin(angle) * speed;
+          const size = Math.random() * 3 + 1;
+          this.particles.push({ x, y, dx, dy, size, alpha: 1, color });
+        }
+      }
+
+      update() {
+        this.life++;
+        for (let p of this.particles) {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.dy += 0.05; // gravity
+          p.alpha -= 0.02;
+        }
+      }
+
+      draw(ctx) {
+        for (let p of this.particles) {
+          ctx.fillStyle = `rgba(${p.color}, ${p.alpha})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      isDone() {
+        return this.particles.every(p => p.alpha <= 0);
+      }
+    }
+
+    const fireworks = [];
+    const colors = [
+      "255, 0, 0",    // red
+      "0, 255, 0",    // green
+      "0, 0, 255",    // blue
+      "255, 255, 0",  // yellow
+      "255, 0, 255",  // purple
+      "0, 255, 255",  // cyan
+      "255, 165, 0"   // orange
+    ];
+
+    function animate() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = fireworks.length - 1; i >= 0; i--) {
+        fireworks[i].update();
+        fireworks[i].draw(ctx);
+        if (fireworks[i].isDone()) {
+          fireworks.splice(i, 1);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    document.getElementById("launchBtn").addEventListener("click", () => {
+      let count = 0;
+      function launchOne() {
+        if (count >= 5) return;
+        const x = Math.random() * canvas.width * 0.8 + canvas.width * 0.1;
+        const y = Math.random() * canvas.height * 0.5 + canvas.height * 0.1;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        fireworks.push(new Firework(x, y, color));
+        count++;
+        setTimeout(launchOne, 300);
+      }
+      launchOne();
+    });
+  </script>
+</body>
+</html>
